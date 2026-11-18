@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>时间管理能力测评 | Time Management Behaviors Scale</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Noto Sans SC -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- QRCode.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '"Noto Sans SC"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            morandi: {
+              50: '#F4F7F9',
+              100: '#E5ECF0',
+              200: '#CAD9E2',
+              300: '#A4BECD',
+              400: '#7C9EB2',
+              500: '#6B8E9B', // Primary Morandi Light Blue
+              600: '#4A6B82', // Primary Morandi Deep Blue
+              700: '#3B5669',
+              800: '#324857',
+              900: '#2B3C49',
+            },
+            warmwhite: '#FAF9F6',
+            sand: '#EFECE6'
+          },
+          boxShadow: {
+            'soft': '0 10px 30px -5px rgba(74, 107, 130, 0.08)',
+            'card': '0 4px 20px -2px rgba(74, 107, 130, 0.06)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #F4F7F9;
+      color: #2B3C49;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Custom Radio Pill Transitions */
+    .likert-btn {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .likert-btn:active {
+      transform: scale(0.95);
+    }
+    .fade-in {
+      animation: fadeIn 0.35s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F4F7F9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CAD9E2;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #7C9EB2;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-morandi-200 selection:text-morandi-900">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-[90%] max-w-md"></div>
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-morandi-100">
+    <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchView('assessment')">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-morandi-600 to-morandi-500 flex items-center justify-center text-white shadow-sm">
+          <i data-lucide="clock" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg text-morandi-900 leading-tight">时间管理能力测评</h1>
+          <p class="text-[11px] text-morandi-500 hidden sm:block">Time Management Behaviors Scale (TMBS)</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- My Report Button (Visible if completed) -->
+        <button id="nav-report-btn" onclick="switchView('report')" class="hidden items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-morandi-600 bg-morandi-50 hover:bg-morandi-100 transition">
+          <i data-lucide="file-bar-chart-2" class="w-4 h-4"></i>
+          <span>我的报告</span>
+        </button>
+
+        <!-- Share QR Code Button -->
+        <button onclick="openQrModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-morandi-700 bg-morandi-100/80 hover:bg-morandi-200/80 transition">
+          <i data-lucide="qr-code" class="w-4 h-4 text-morandi-600"></i>
+          <span>分享二维码</span>
+        </button>
+
+        <!-- Admin Dashboard Button -->
+        <button onclick="handleAdminNav()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-white bg-morandi-600 hover:bg-morandi-700 shadow-sm transition">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          <span class="hidden xs:inline">汇总看板</span>
+          <span class="xs:hidden">汇总</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8">
+
+    <!-- ==================== VIEW 1: PARTICIPANT ASSESSMENT ==================== -->
+    <section id="view-assessment" class="fade-in space-y-6">
+      <!-- Welcome & Participant Info Card -->
+      <div class="bg-warmwhite rounded-3xl p-6 sm:p-8 shadow-soft border border-morandi-100 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-morandi-200/40 to-transparent rounded-bl-full pointer-events-none"></div>
+        <div class="relative">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-morandi-100 text-morandi-700 text-xs font-medium mb-3">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>学术经典量表 · 预计耗时 3 分钟</span>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-bold text-morandi-900 mb-2">探索你的时间掌控力</h2>
+          <p class="text-sm text-morandi-700/85 leading-relaxed mb-6">
+            本测评基于 Macan 等人编制的《时间管理行为量表》(TMBS)，从<strong>目标与优先级设定</strong>、<strong>计划与日程执行</strong>、<strong>条理性与环境偏好</strong>三大核心维度全面评估你的时间管理风格，提交后立即生成专属可视化分析报告。
+          </p>
+
+          <!-- Participant Identity Inputs -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-4 rounded-2xl border border-morandi-100">
+            <div>
+              <label for="input-name" class="block text-xs font-semibold text-morandi-700 mb-1.5">
+                姓名 / 昵称 <span class="text-rose-500">*</span>
+              </label>
+              <div class="relative">
+                <i data-lucide="user" class="w-4 h-4 text-morandi-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="input-name" placeholder="请输入您的姓名或昵称"
+                  class="w-full pl-10 pr-4 py-2.5 bg-morandi-50/60 border border-morandi-200 rounded-xl text-sm text-morandi-900 placeholder-morandi-400 focus:outline-none focus:border-morandi-500 focus:bg-white transition" />
+              </div>
+            </div>
+            <div>
+              <label for="input-group" class="block text-xs font-semibold text-morandi-700 mb-1.5">
+                组别 / 部门 / 学号 <span class="text-morandi-400 font-normal">(选填，便于汇总统计)</span>
+              </label>
+              <div class="relative">
+                <i data-lucide="tag" class="w-4 h-4 text-morandi-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="input-group" placeholder="例如：产品组 / 2026级1班"
+                  class="w-full pl-10 pr-4 py-2.5 bg-morandi-50/60 border border-morandi-200 rounded-xl text-sm text-morandi-900 placeholder-morandi-400 focus:outline-none focus:border-morandi-500 focus:bg-white transition" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sticky Progress & Mode Control Bar -->
+      <div class="sticky top-16 z-20 bg-morandi-50/95 backdrop-blur-md py-3 border-b border-morandi-200/60">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-morandi-800">答题进度</span>
+            <span id="progress-text" class="text-xs font-bold text-morandi-600 bg-white px-2.5 py-0.5 rounded-full border border-morandi-200">0 / 28 题</span>
+          </div>
+          <!-- View Mode Switcher: Step-by-step vs All at once -->
+          <div class="inline-flex bg-morandi-200/60 p-0.5 rounded-xl text-xs">
+            <button id="mode-step-btn" onclick="setQuestionMode('step')" class="px-3 py-1 rounded-lg font-medium bg-white text-morandi-800 shadow-sm transition">
+              分维度答题
+            </button>
+            <button id="mode-all-btn" onclick="setQuestionMode('all')" class="px-3 py-1 rounded-lg font-medium text-morandi-600 hover:text-morandi-900 transition">
+              全览模式
+            </button>
+          </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full h-2 bg-morandi-200/70 rounded-full overflow-hidden">
+          <div id="progress-bar" class="h-full bg-gradient-to-r from-morandi-500 to-morandi-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <!-- Dimension Tabs (Visible in Step Mode) -->
+        <div id="dimension-tabs" class="grid grid-cols-3 gap-2 mt-3">
+          <button onclick="setActiveStep(0)" id="step-tab-0" class="py-2 px-2 rounded-xl text-xs font-semibold border transition flex flex-col sm:flex-row items-center justify-center gap-1 bg-morandi-600 text-white border-morandi-600 shadow-sm">
+            <span>一、目标设定</span>
+            <span id="step-count-0" class="opacity-80 text-[11px]">(0/10)</span>
+          </button>
+          <button onclick="setActiveStep(1)" id="step-tab-1" class="py-2 px-2 rounded-xl text-xs font-semibold border transition flex flex-col sm:flex-row items-center justify-center gap-1 bg-white text-morandi-600 border-morandi-200 hover:bg-morandi-100/50">
+            <span>二、计划执行</span>
+            <span id="step-count-1" class="opacity-80 text-[11px]">(0/11)</span>
+          </button>
+          <button onclick="setActiveStep(2)" id="step-tab-2" class="py-2 px-2 rounded-xl text-xs font-semibold border transition flex flex-col sm:flex-row items-center justify-center gap-1 bg-white text-morandi-600 border-morandi-200 hover:bg-morandi-100/50">
+            <span>三、条理偏好</span>
+            <span id="step-count-2" class="opacity-80 text-[11px]">(0/7)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scale Legend Hint -->
+      <div class="bg-white/80 rounded-2xl px-4 py-3 border border-morandi-100 flex flex-wrap items-center justify-between gap-2 text-xs text-morandi-600">
+        <span class="font-medium text-morandi-800">计分标准：</span>
+        <div class="flex flex-wrap gap-x-4 gap-y-1">
+          <span><strong>1</strong> = 非常不符合</span>
+          <span><strong>2</strong> = 不太符合</span>
+          <span><strong>3</strong> = 一般</span>
+          <span><strong>4</strong> = 比较符合</span>
+          <span><strong>5</strong> = 非常符合</span>
+        </div>
+      </div>
+
+      <!-- Questions Container -->
+      <div id="questions-container" class="space-y-4"></div>
+
+      <!-- Bottom Navigation & Submit Controls -->
+      <div class="pt-4 pb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div id="step-nav-buttons" class="flex items-center gap-3 w-full sm:w-auto">
+          <button id="prev-step-btn" onclick="changeStep(-1)" class="flex-1 sm:flex-none px-5 py-3 rounded-2xl font-semibold text-sm bg-white text-morandi-700 border border-morandi-200 hover:bg-morandi-100 transition disabled:opacity-40 disabled:pointer-events-none">
+            ← 上一维度
+          </button>
+          <button id="next-step-btn" onclick="changeStep(1)" class="flex-1 sm:flex-none px-5 py-3 rounded-2xl font-semibold text-sm bg-morandi-100 text-morandi-800 hover:bg-morandi-200 transition">
+            下一维度 →
+          </button>
+        </div>
+
+        <button id="submit-btn" onclick="submitAssessment()" class="w-full sm:w-auto sm:ml-auto px-8 py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-morandi-600 to-morandi-500 hover:from-morandi-700 hover:to-morandi-600 shadow-lg shadow-morandi-600/20 transition flex items-center justify-center gap-2">
+          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+          <span>提交并生成分析报告</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: INSTANT ANALYSIS REPORT ==================== -->
+    <section id="view-report" class="hidden fade-in space-y-6 pb-10">
+      <!-- Report Action Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <button onclick="startNewAssessment()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-white text-morandi-700 border border-morandi-200 hover:bg-morandi-50 transition">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          <span>重新测评 / 下一位填写</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <span id="sync-badge" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <i data-lucide="cloud-check" class="w-3.5 h-3.5"></i>
+            <span>结果已自动同步汇总</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Main Score & Tier Result Card -->
+      <div id="report-capture-area" class="bg-warmwhite rounded-3xl p-6 sm:p-8 shadow-soft border border-morandi-100 space-y-6">
+        <!-- User Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-morandi-100 pb-5">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-semibold uppercase tracking-wider text-morandi-500">TMBS 时间管理能力诊断书</span>
+            </div>
+            <h2 class="text-2xl font-bold text-morandi-900">
+              <span id="rep-name">测评者</span>
+              <span id="rep-group" class="ml-2 text-sm font-normal text-morandi-500"></span>
+            </h2>
+            <p id="rep-time" class="text-xs text-morandi-400 mt-1"></p>
+          </div>
+
+          <!-- Tier Badge -->
+          <div id="rep-tier-badge" class="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-morandi-600 text-white shadow-sm self-start sm:self-center">
+            <i id="rep-tier-icon" data-lucide="award" class="w-6 h-6"></i>
+            <div>
+              <div class="text-[10px] opacity-80 leading-none mb-0.5">综合能力等级</div>
+              <div id="rep-tier-title" class="text-base font-bold leading-tight">卓越掌控型</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Score Summary & Radar Chart Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          <!-- Left: Big Score + Dimension Bars -->
+          <div class="md:col-span-6 space-y-5">
+            <div class="bg-white rounded-2xl p-5 border border-morandi-100 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-medium text-morandi-500 mb-1">综合总分 (满分 140 分)</div>
+                <div class="flex items-baseline gap-2">
+                  <span id="rep-total-score" class="text-4xl font-extrabold text-morandi-700">118</span>
+                  <span class="text-sm text-morandi-400">/ 140</span>
+                </div>
+              </div>
+              <div class="h-12 w-[1px] bg-morandi-100"></div>
+              <div class="text-right">
+                <div class="text-xs font-medium text-morandi-500 mb-1">题项平均分 (1.0 - 5.0)</div>
+                <div class="flex items-baseline justify-end gap-1">
+                  <span id="rep-avg-score" class="text-3xl font-bold text-morandi-600">4.21</span>
+                  <span class="text-xs text-morandi-400">分</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3 Dimensions Horizontal Comparison Bars -->
+            <div class="bg-white rounded-2xl p-5 border border-morandi-100 space-y-4">
+              <h3 class="text-xs font-bold text-morandi-800 uppercase tracking-wider">三大核心维度得分表现</h3>
+              
+              <!-- Dim 1 -->
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="font-semibold text-morandi-800">1. 目标与优先级设定</span>
+                  <span class="font-bold text-morandi-600"><span id="rep-d1-score">0</span>/50 (<span id="rep-d1-pct">0</span>%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-morandi-100 rounded-full overflow-hidden">
+                  <div id="rep-d1-bar" class="h-full bg-morandi-600 rounded-full transition-all duration-700" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Dim 2 -->
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="font-semibold text-morandi-800">2. 计划与日程执行技巧</span>
+                  <span class="font-bold text-morandi-500"><span id="rep-d2-score">0</span>/55 (<span id="rep-d2-pct">0</span>%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-morandi-100 rounded-full overflow-hidden">
+                  <div id="rep-d2-bar" class="h-full bg-morandi-500 rounded-full transition-all duration-700" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Dim 3 -->
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="font-semibold text-morandi-800">3. 条理性与环境偏好</span>
+                  <span class="font-bold text-teal-600"><span id="rep-d3-score">0</span>/35 (<span id="rep-d3-pct">0</span>%)</span>
+                </div>
+                <div class="w-full h-2.5 bg-morandi-100 rounded-full overflow-hidden">
+                  <div id="rep-d3-bar" class="h-full bg-teal-600/80 rounded-full transition-all duration-700" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: SVG 3-Axis Radar Chart -->
+          <div class="md:col-span-6 bg-white rounded-2xl p-4 border border-morandi-100 flex flex-col items-center justify-center">
+            <h3 class="text-xs font-bold text-morandi-800 mb-1">三维度能力雷达图</h3>
+            <p class="text-[11px] text-morandi-400 mb-2">各维度得分率平衡度分析</p>
+            <div class="w-full max-w-[280px] aspect-square flex items-center justify-center">
+              <svg id="radar-svg" viewBox="0 0 300 280" class="w-full h-full overflow-visible"></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Personalized Diagnosis & Actionable Suggestions -->
+        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-morandi-100 space-y-4">
+          <div class="flex items-center gap-2 text-morandi-800 font-bold text-base">
+            <i data-lucide="compass" class="w-5 h-5 text-morandi-600"></i>
+            <h3>专属画像诊断与提升建议</h3>
+          </div>
+          <p id="rep-diagnosis-summary" class="text-sm text-morandi-700 leading-relaxed"></p>
+          
+          <div class="bg-morandi-50/80 rounded-xl p-4 border border-morandi-100 space-y-2">
+            <div class="text-xs font-bold text-morandi-800 flex items-center gap-1.5">
+              <i data-lucide="lightbulb" class="w-4 h-4 text-amber-500"></i>
+              <span id="rep-weakness-title">重点行动指南：</span>
+            </div>
+            <ul id="rep-action-list" class="text-xs sm:text-sm text-morandi-700 space-y-1.5 list-disc list-inside"></ul>
+          </div>
+        </div>
+
+        <!-- Report Footer Actions -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <p class="text-xs text-morandi-400">提示：可直接手机截屏保存本诊断报告，或点击右侧生成分享图片</p>
+          <button onclick="downloadReportImage()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-morandi-600 hover:bg-morandi-700 shadow-sm transition">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>保存结果卡片图片</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: ORGANIZER ADMIN DASHBOARD ==================== -->
+    <section id="view-admin" class="hidden fade-in space-y-6 pb-12">
+      <!-- Admin Header -->
+      <div class="bg-warmwhite rounded-3xl p-6 shadow-soft border border-morandi-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-morandi-100 text-morandi-700 text-xs font-medium mb-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>云端实时同步中</span>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-bold text-morandi-900">团队测评数据汇总看板</h2>
+          <p class="text-xs text-morandi-500 mt-0.5">所有参与者扫码提交的测评结果将自动汇总于此</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openQrModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-morandi-100 text-morandi-800 hover:bg-morandi-200 transition">
+            <i data-lucide="qr-code" class="w-4 h-4"></i>
+            <span>邀请扫码</span>
+          </button>
+          <button onclick="exportCSV()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-morandi-600 text-white hover:bg-morandi-700 shadow-sm transition">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+            <span>导出 Excel/CSV</span>
+          </button>
+          <button onclick="confirmClearData()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+            <span>清空数据</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Overview Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-morandi-100 shadow-card">
+          <div class="text-xs font-medium text-morandi-500 mb-1">累计参与人数</div>
+          <div class="flex items-baseline gap-1.5">
+            <span id="stat-total-count" class="text-3xl font-extrabold text-morandi-900">0</span>
+            <span class="text-xs text-morandi-400">人</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-morandi-100 shadow-card">
+          <div class="text-xs font-medium text-morandi-500 mb-1">团队平均总分</div>
+          <div class="flex items-baseline gap-1.5">
+            <span id="stat-avg-total" class="text-3xl font-extrabold text-morandi-600">0.0</span>
+            <span class="text-xs text-morandi-400">/ 140</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-morandi-100 shadow-card">
+          <div class="text-xs font-medium text-morandi-500 mb-1">团队题项均分</div>
+          <div class="flex items-baseline gap-1.5">
+            <span id="stat-avg-mean" class="text-3xl font-extrabold text-morandi-500">0.00</span>
+            <span class="text-xs text-morandi-400">/ 5.0</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-morandi-100 shadow-card">
+          <div class="text-xs font-medium text-morandi-500 mb-1">卓越掌控型占比</div>
+          <div class="flex items-baseline gap-1.5">
+            <span id="stat-top-rate" class="text-3xl font-extrabold text-emerald-600">0%</span>
+            <span id="stat-top-count" class="text-xs text-morandi-400">(0人)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier Distribution & Team Dimension Averages -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Tier Distribution Bar -->
+        <div class="bg-white rounded-2xl p-6 border border-morandi-100 shadow-card space-y-4">
+          <h3 class="text-sm font-bold text-morandi-900">能力等级分布比例</h3>
+          <div id="tier-dist-bar" class="w-full h-4 bg-morandi-100 rounded-full overflow-hidden flex">
+            <div class="bg-morandi-200 w-full h-full"></div>
+          </div>
+          <div id="tier-dist-legend" class="grid grid-cols-2 gap-3 text-xs">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Team Dimension Averages -->
+        <div class="bg-white rounded-2xl p-6 border border-morandi-100 shadow-card space-y-4">
+          <h3 class="text-sm font-bold text-morandi-900">团队三大维度平均得分率</h3>
+          <div class="space-y-3.5 text-xs">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-medium text-morandi-700">维度一：目标与优先级设定 (满分50)</span>
+                <span id="team-d1-text" class="font-bold text-morandi-700">0.0 分 (0%)</span>
+              </div>
+              <div class="w-full h-2.5 bg-morandi-100 rounded-full overflow-hidden">
+                <div id="team-d1-bar" class="h-full bg-morandi-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-medium text-morandi-700">维度二：计划与日程执行技巧 (满分55)</span>
+                <span id="team-d2-text" class="font-bold text-morandi-500">0.0 分 (0%)</span>
+              </div>
+              <div class="w-full h-2.5 bg-morandi-100 rounded-full overflow-hidden">
+                <div id="team-d2-bar" class="h-full bg-morandi-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="font-medium text-morandi-700">维度三：条理性与环境偏好 (满分35)</span>
+                <span id="team-d3-text" class="font-bold text-teal-600">0.0 分 (0%)</span>
+              </div>
+              <div class="w-full h-2.5 bg-morandi-100 rounded-full overflow-hidden">
+                <div id="team-d3-bar" class="h-full bg-teal-600/80 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Records Table -->
+      <div class="bg-white rounded-2xl border border-morandi-100 shadow-card overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-morandi-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h3 class="text-sm font-bold text-morandi-900">参与者明细数据表</h3>
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Search Input -->
+            <div class="relative flex-1 sm:w-52">
+              <i data-lucide="search" class="w-4 h-4 text-morandi-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input type="text" id="admin-search" oninput="renderAdminTable()" placeholder="搜索姓名或组别..."
+                class="w-full pl-9 pr-3 py-1.5 bg-morandi-50 border border-morandi-200 rounded-xl text-xs text-morandi-900 focus:outline-none focus:border-morandi-500" />
+            </div>
+            <!-- Sort Selector -->
+            <select id="admin-sort" onchange="renderAdminTable()" class="px-3 py-1.5 bg-morandi-50 border border-morandi-200 rounded-xl text-xs text-morandi-700 focus:outline-none">
+              <option value="time-desc">最新提交优先</option>
+              <option value="score-desc">总分从高到低</option>
+              <option value="score-asc">总分从低到高</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-morandi-50/80 text-morandi-600 text-xs border-b border-morandi-100">
+                <th class="py-3 px-4 font-semibold">姓名/昵称</th>
+                <th class="py-3 px-4 font-semibold">组别/学号</th>
+                <th class="py-3 px-4 font-semibold">能力等级</th>
+                <th class="py-3 px-4 font-semibold text-right">总分 (均分)</th>
+                <th class="py-3 px-4 font-semibold text-right">目标设定</th>
+                <th class="py-3 px-4 font-semibold text-right">计划执行</th>
+                <th class="py-3 px-4 font-semibold text-right">条理偏好</th>
+                <th class="py-3 px-4 font-semibold text-right">提交时间</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body" class="divide-y divide-morandi-100 text-xs sm:text-sm">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+        <div id="admin-empty-state" class="hidden py-12 text-center text-morandi-400 text-sm">
+          <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+          <p>暂无测评记录，快点击右上角“分享二维码”邀请大家扫码填写吧！</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODAL 1: QR CODE SHARE POSTER ==================== -->
+  <div id="qr-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-morandi-900/50 backdrop-blur-sm p-4">
+    <div class="bg-warmwhite rounded-3xl max-w-md w-full p-6 shadow-2xl border border-morandi-100 fade-in relative max-h-[92vh] overflow-y-auto">
+      <button onclick="closeQrModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-morandi-100 text-morandi-600 hover:bg-morandi-200 flex items-center justify-center transition">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <div class="text-center mb-4">
+        <h3 class="text-lg font-bold text-morandi-900">扫码参与时间管理测评</h3>
+        <p class="text-xs text-morandi-500 mt-0.5">微信 / 浏览器扫一扫即可填写并自动汇总结果</p>
+      </div>
+
+      <!-- Visual Poster Card Preview -->
+      <div id="qr-poster-preview" class="bg-gradient-to-b from-morandi-600 to-morandi-700 rounded-2xl p-6 text-white text-center shadow-lg mb-4">
+        <div class="inline-block px-3 py-1 rounded-full bg-white/15 text-[11px] font-medium mb-2">
+          TMBS 学术量表 · 3分钟快速诊断
+        </div>
+        <h4 class="text-xl font-bold tracking-wide mb-1">测测你的时间管理能力</h4>
+        <p class="text-xs text-morandi-100 mb-5">目标设定 · 计划执行 · 条理偏好 三维雷达解析</p>
+        
+        <div class="bg-white p-3.5 rounded-2xl inline-block shadow-md mx-auto">
+          <div id="qrcode-canvas-box" class="w-[180px] h-[180px] flex items-center justify-center"></div>
+        </div>
+
+        <p class="text-xs font-medium text-morandi-100 mt-4">长按识别或扫描二维码立即开始</p>
+      </div>
+
+      <!-- Editable URL Input -->
+      <div class="mb-4">
+        <label class="block text-[11px] font-semibold text-morandi-600 mb-1">测评访问链接（支持手动修改/粘贴公网地址）</label>
+        <div class="flex gap-2">
+          <input type="text" id="qr-url-input" oninput="regenerateQRCode()"
+            class="flex-1 px-3 py-2 bg-white border border-morandi-200 rounded-xl text-xs text-morandi-800 focus:outline-none focus:border-morandi-500" />
+          <button onclick="copyShareUrl()" class="px-3 py-2 bg-morandi-100 hover:bg-morandi-200 text-morandi-800 rounded-xl text-xs font-semibold transition shrink-0">
+            复制链接
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="copyShareUrl()" class="py-2.5 px-4 rounded-xl text-xs font-semibold bg-white text-morandi-700 border border-morandi-200 hover:bg-morandi-50 transition flex items-center justify-center gap-1.5">
+          <i data-lucide="link" class="w-4 h-4"></i>
+          <span>一键复制链接</span>
+        </button>
+        <button onclick="downloadQrPoster()" class="py-2.5 px-4 rounded-xl text-xs font-semibold bg-morandi-600 text-white hover:bg-morandi-700 shadow-sm transition flex items-center justify-center gap-1.5">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>下载二维码海报</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: ADMIN PASSWORD GATE ==================== -->
+  <div id="admin-auth-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-morandi-900/50 backdrop-blur-sm p-4">
+    <div class="bg-warmwhite rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-morandi-100 fade-in">
+      <div class="w-12 h-12 rounded-2xl bg-morandi-100 text-morandi-600 flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="shield-check" class="w-6 h-6"></i>
+      </div>
+      <h3 class="text-lg font-bold text-center text-morandi-900">组织者汇总看板验证</h3>
+      <p class="text-xs text-center text-morandi-500 mt-1 mb-5">请输入管理员密码查看团队汇总数据（默认密码：<strong class="text-morandi-700">1234</strong>）</p>
+      
+      <input type="password" id="admin-pwd-input" placeholder="输入密码 (默认 1234)" onkeydown="if(event.key==='Enter') verifyAdminPwd()"
+        class="w-full px-4 py-2.5 bg-white border border-morandi-200 rounded-xl text-sm text-center tracking-widest text-morandi-900 focus:outline-none focus:border-morandi-500 mb-4" />
+      
+      <div class="grid grid-cols-2 gap-2.5">
+        <button onclick="closeAdminAuthModal()" class="py-2.5 rounded-xl text-xs font-semibold bg-white text-morandi-600 border border-morandi-200 hover:bg-morandi-50">
+          取消
+        </button>
+        <button onclick="verifyAdminPwd()" class="py-2.5 rounded-xl text-xs font-semibold bg-morandi-600 text-white hover:bg-morandi-700">
+          确认进入
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: CONFIRM CLEAR DATA ==================== -->
+  <div id="confirm-clear-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-morandi-900/50 backdrop-blur-sm p-4">
+    <div class="bg-warmwhite rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-morandi-100 fade-in">
+      <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+      </div>
+      <h3 class="text-lg font-bold text-center text-morandi-900">确认清空所有汇总数据？</h3>
+      <p class="text-xs text-center text-morandi-500 mt-1 mb-5">此操作将删除云端存储的全部参与者测评记录，建议先导出 CSV 备份。删除后无法恢复。</p>
+      
+      <div class="grid grid-cols-2 gap-2.5">
+        <button onclick="closeClearModal()" class="py-2.5 rounded-xl text-xs font-semibold bg-white text-morandi-600 border border-morandi-200 hover:bg-morandi-50">
+          暂不清空
+        </button>
+        <button onclick="executeClearData()" class="py-2.5 rounded-xl text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700">
+          确认清空
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK & Application Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // ==================== 1. TMBS 28-ITEM SCALE DATA ====================
+    const DIMENSIONS = [
+      {
+        id: 1,
+        name: "维度一：目标与优先级设定",
+        en: "Setting Goals and Priorities",
+        maxScore: 50,
+        desc: "评估设定短期与长期目标、拆解任务及按优先级聚焦核心事项的能力"
+      },
+      {
+        id: 2,
+        name: "维度二：计划与日程执行技巧",
+        en: "Mechanics: Scheduling & Planning",
+        maxScore: 55,
+        desc: "评估使用日程工具、列待办清单、利用碎片时间及防干扰的执行习惯"
+      },
+      {
+        id: 3,
+        name: "维度三：条理性与环境偏好",
+        en: "Preference for Organization",
+        maxScore: 35,
+        desc: "评估工作/学习环境的整洁度、任务条理性及对计划性的内在偏好"
+      }
+    ];
+
+    const QUESTIONS = [
+      // Dimension 1: Setting Goals and Priorities (10 items, all forward scored)
+      { id: 1, dim: 1, reverse: false, zh: "我会评估并回顾每日的日程安排", en: "Evaluates daily schedule" },
+      { id: 2, dim: 1, reverse: false, zh: "我会定期复盘自己的各项活动", en: "Reviews activities" },
+      { id: 3, dim: 1, reverse: false, zh: "我会为任务设定明确的截止期限", en: "Sets deadlines" },
+      { id: 4, dim: 1, reverse: false, zh: "我会主动寻找方法提高任务执行效率", en: "Increases task efficiency" },
+      { id: 5, dim: 1, reverse: false, zh: "我会根据重要程度设定任务优先级", en: "Sets priorities" },
+      { id: 6, dim: 1, reverse: false, zh: "我会把复杂的大任务拆解成小步骤", en: "Breaks down tasks" },
+      { id: 7, dim: 1, reverse: false, zh: "我会制定清晰的短期目标", en: "Sets short-term goals" },
+      { id: 8, dim: 1, reverse: false, zh: "我会定期检查自己的目标进展", en: "Reviews goals" },
+      { id: 9, dim: 1, reverse: false, zh: "我会优先完成最重要的核心任务", en: "Completes priority tasks" },
+      { id: 10, dim: 1, reverse: false, zh: "我会保持对长期目标的专注与规划", en: "Keeps long-term goals" },
+
+      // Dimension 2: Mechanics: Scheduling & Planning (11 items, all forward scored)
+      { id: 11, dim: 2, reverse: false, zh: "我有随身携带日程本或使用电子日历的习惯", en: "Carries appointment book" },
+      { id: 12, dim: 2, reverse: false, zh: "我会列出待办事项清单", en: "Makes list of things to do" },
+      { id: 13, dim: 2, reverse: false, zh: "我会写备忘便签来提醒自己", en: "Writes reminder notes" },
+      { id: 14, dim: 2, reverse: false, zh: "我会有效利用等待或碎片化时间", en: "Uses waiting time" },
+      { id: 15, dim: 2, reverse: false, zh: "我有做记录与归档的习惯", en: "Practices recordkeeping" },
+      { id: 16, dim: 2, reverse: false, zh: "我会随身携带笔记本随时记录想法", en: "Carries notebook" },
+      { id: 17, dim: 2, reverse: false, zh: "我会采取措施避免外界打断和干扰", en: "Avoids interruptions" },
+      { id: 18, dim: 2, reverse: false, zh: "我会按周提前规划日程与活动", en: "Schedules events weekly" },
+      { id: 19, dim: 2, reverse: false, zh: "我会记录每日时间日志或工作日志", en: "Keeps daily log" },
+      { id: 20, dim: 2, reverse: false, zh: "我会每天固定规划时间安排", en: "Schedules time daily" },
+      { id: 21, dim: 2, reverse: false, zh: "我会定期整理文件与资料", en: "Organizes paperwork" },
+
+      // Dimension 3: Preference for Organization (7 items: first 6 reverse scored, 28th forward scored)
+      { id: 22, dim: 3, reverse: true, zh: "我经常感到做事缺乏条理、比较混乱", en: "Is disorganized" },
+      { id: 23, dim: 3, reverse: true, zh: "我的工作或学习桌面经常比较凌乱", en: "Has messy work space" },
+      { id: 24, dim: 3, reverse: true, zh: "我习惯凭个人喜好（而非重要性）来安排任务顺序", en: "Organizes tasks by preference" },
+      { id: 25, dim: 3, reverse: true, zh: "我经常忘记自己写下的待办清单", en: "Forgets lists made" },
+      { id: 26, dim: 3, reverse: true, zh: "我认为每天的变化太多，根本无法提前做计划", en: "Believes days to be too unpredictable" },
+      { id: 27, dim: 3, reverse: true, zh: "我经常会在无意中浪费很多时间", en: "Schedules wasted time" },
+      { id: 28, dim: 3, reverse: false, zh: "我习惯在结束工作/学习后保持桌面整洁", en: "Leaves clean work space" }
+    ];
+
+    const LIKERT_OPTIONS = [
+      { val: 1, label: "非常不符合" },
+      { val: 2, label: "不太符合" },
+      { val: 3, label: "一般" },
+      { val: 4, label: "比较符合" },
+      { val: 5, label: "非常符合" }
+    ];
+
+    // ==================== 2. APPLICATION STATE ====================
+    let answers = {}; // { questionId: rawScore (1..5) }
+    let questionMode = 'step'; // 'step' | 'all'
+    let activeStep = 0; // 0, 1, 2
+    let highlightedUnanswered = new Set();
+    let latestReport = null;
+    let isAdminUnlocked = false;
+    let allSubmissions = []; // Real-time synced from Firestore
+
+    // Firebase references
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'tmbs-assessment-app';
+
+    // ==================== 3. FIREBASE INITIALIZATION & SYNC ====================
+    async function initCloudSync() {
+      try {
+        if (typeof __firebase_config === 'undefined') {
+          console.warn("Firebase config not found, running in local fallback mode.");
+          return;
+        }
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+        currentUser = auth.currentUser;
+
+        // Subscribe to public collection for organizer aggregation (RULE 1 & RULE 2 compliant)
+        if (currentUser) {
+          const submissionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'tmbs_submissions');
+          onSnapshot(submissionsRef, (snapshot) => {
+            const list = [];
+            snapshot.forEach((docSnap) => {
+              list.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            allSubmissions = list;
+            if (isAdminUnlocked) {
+              renderAdminDashboard();
+            }
+          }, (error) => {
+            console.error("Firestore sync error:", error);
+          });
+        }
+      } catch (err) {
+        console.error("Cloud initialization error:", err);
+      }
+    }
+
+    // ==================== 4. UI RENDERING: QUESTIONS ====================
+    window.renderQuestions = function() {
+      const container = document.getElementById('questions-container');
+      container.innerHTML = '';
+
+      const dimsToRender = questionMode === 'step' ? [DIMENSIONS[activeStep]] : DIMENSIONS;
+
+      dimsToRender.forEach((dim) => {
+        // Dimension Header Card
+        const dimHeader = document.createElement('div');
+        dimHeader.className = 'bg-morandi-600 text-white rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2';
+        dimHeader.innerHTML = `
+          <div>
+            <h3 class="font-bold text-base sm:text-lg">${dim.name}</h3>
+            <p class="text-xs text-morandi-100 mt-0.5">${dim.en} · ${dim.desc}</p>
+          </div>
+          <span class="text-xs bg-white/15 px-3 py-1 rounded-full self-start sm:self-center shrink-0">
+            本维度共 ${QUESTIONS.filter(q => q.dim === dim.id).length} 题
+          </span>
+        `;
+        container.appendChild(dimHeader);
+
+        // Question Cards
+        const dimQuestions = QUESTIONS.filter(q => q.dim === dim.id);
+        dimQuestions.forEach((q) => {
+          const selectedVal = answers[q.id];
+          const isMissing = highlightedUnanswered.has(q.id) && !selectedVal;
+
+          const card = document.createElement('div');
+          card.id = `q-card-${q.id}`;
+          card.className = `bg-white rounded-2xl p-4 sm:p-5 border transition-all ${
+            isMissing
+              ? 'border-rose-400 ring-2 ring-rose-200 bg-rose-50/30'
+              : selectedVal
+                ? 'border-morandi-200/80 shadow-card'
+                : 'border-morandi-100 shadow-card'
+          }`;
+
+          const buttonsHtml = LIKERT_OPTIONS.map(opt => {
+            const isSelected = selectedVal === opt.val;
+            return `
+              <button type="button" onclick="selectAnswer(${q.id}, ${opt.val})"
+                class="likert-btn flex-1 py-2.5 px-1 sm:px-2 rounded-xl border text-center flex flex-col items-center justify-center gap-0.5 ${
+                  isSelected
+                    ? 'bg-morandi-600 text-white border-morandi-600 shadow-sm font-bold'
+                    : 'bg-morandi-50/60 text-morandi-700 border-morandi-200/70 hover:bg-morandi-100/80'
+                }">
+                <span class="text-sm sm:text-base font-bold leading-none">${opt.val}</span>
+                <span class="text-[10px] sm:text-xs opacity-90 leading-tight">${opt.label}</span>
+              </button>
+            `;
+          }).join('');
+
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-2 mb-3.5">
+              <div class="flex items-start gap-2.5">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg text-xs font-bold shrink-0 mt-0.5 ${
+                  selectedVal ? 'bg-morandi-600 text-white' : 'bg-morandi-100 text-morandi-700'
+                }">${q.id}</span>
+                <div>
+                  <p class="font-semibold text-sm sm:text-base text-morandi-900 leading-snug">${q.zh}</p>
+                  <p class="text-xs text-morandi-400 mt-0.5">${q.en}</p>
+                </div>
+              </div>
+              ${isMissing ? '<span class="text-[11px] font-semibold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-md shrink-0">待作答</span>' : ''}
+            </div>
+            <div class="grid grid-cols-5 gap-1.5 sm:gap-2.5">
+              ${buttonsHtml}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      });
+
+      updateProgressUI();
+    };
+
+    window.selectAnswer = function(qId, val) {
+      answers[qId] = val;
+      highlightedUnanswered.delete(qId);
+      renderQuestions();
+    };
+
+    window.setQuestionMode = function(mode) {
+      questionMode = mode;
+      const stepBtn = document.getElementById('mode-step-btn');
+      const allBtn = document.getElementById('mode-all-btn');
+      const dimTabs = document.getElementById('dimension-tabs');
+      const stepNav = document.getElementById('step-nav-buttons');
+
+      if (mode === 'step') {
+        stepBtn.className = 'px-3 py-1 rounded-lg font-medium bg-white text-morandi-800 shadow-sm transition';
+        allBtn.className = 'px-3 py-1 rounded-lg font-medium text-morandi-600 hover:text-morandi-900 transition';
+        dimTabs.classList.remove('hidden');
+        stepNav.classList.remove('hidden');
+      } else {
+        allBtn.className = 'px-3 py-1 rounded-lg font-medium bg-white text-morandi-800 shadow-sm transition';
+        stepBtn.className = 'px-3 py-1 rounded-lg font-medium text-morandi-600 hover:text-morandi-900 transition';
+        dimTabs.classList.add('hidden');
+        stepNav.classList.add('hidden');
+      }
+      renderQuestions();
+    };
+
+    window.setActiveStep = function(stepIdx) {
+      activeStep = stepIdx;
+      for (let i = 0; i < 3; i++) {
+        const tab = document.getElementById(`step-tab-${i}`);
+        if (i === activeStep) {
+          tab.className = 'py-2 px-2 rounded-xl text-xs font-semibold border transition flex flex-col sm:flex-row items-center justify-center gap-1 bg-morandi-600 text-white border-morandi-600 shadow-sm';
+        } else {
+          tab.className = 'py-2 px-2 rounded-xl text-xs font-semibold border transition flex flex-col sm:flex-row items-center justify-center gap-1 bg-white text-morandi-600 border-morandi-200 hover:bg-morandi-100/50';
+        }
+      }
+      document.getElementById('prev-step-btn').disabled = (activeStep === 0);
+      const nextBtn = document.getElementById('next-step-btn');
+      if (activeStep === 2) {
+        nextBtn.classList.add('hidden');
+      } else {
+        nextBtn.classList.remove('hidden');
+      }
+      renderQuestions();
+      window.scrollTo({ top: 180, behavior: 'smooth' });
+    };
+
+    window.changeStep = function(delta) {
+      const next = activeStep + delta;
+      if (next >= 0 && next <= 2) {
+        setActiveStep(next);
+      }
+    };
+
+    function updateProgressUI() {
+      const answeredCount = Object.keys(answers).length;
+      const pct = Math.round((answeredCount / 28) * 100);
+      document.getElementById('progress-text').textContent = `${answeredCount} / 28 题`;
+      document.getElementById('progress-bar').style.width = `${pct}%`;
+
+      // Update per-dimension counts
+      const d1Count = QUESTIONS.filter(q => q.dim === 1 && answers[q.id]).length;
+      const d2Count = QUESTIONS.filter(q => q.dim === 2 && answers[q.id]).length;
+      const d3Count = QUESTIONS.filter(q => q.dim === 3 && answers[q.id]).length;
+      document.getElementById('step-count-0').textContent = `(${d1Count}/10)`;
+      document.getElementById('step-count-1').textContent = `(${d2Count}/11)`;
+      document.getElementById('step-count-2').textContent = `(${d3Count}/7)`;
+    }
+
+    // ==================== 5. SCORING & SUBMISSION LOGIC ====================
+    window.submitAssessment = async function() {
+      const nameInput = document.getElementById('input-name');
+      const groupInput = document.getElementById('input-group');
+      const name = nameInput.value.trim();
+      const group = groupInput.value.trim();
+
+      if (!name) {
+        showToast('请先填写您的姓名或昵称，方便生成专属报告！', 'error');
+        nameInput.focus();
+        nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      // Check for unanswered questions
+      const missing = QUESTIONS.filter(q => !answers[q.id]);
+      if (missing.length > 0) {
+        missing.forEach(q => highlightedUnanswered.add(q.id));
+        const firstMissing = missing[0];
+        if (questionMode === 'step') {
+          setActiveStep(firstMissing.dim - 1);
+        } else {
+          renderQuestions();
+        }
+        showToast(`还有 ${missing.length} 道题未完成，已为您标红提示！`, 'error');
+        setTimeout(() => {
+          const el = document.getElementById(`q-card-${firstMissing.id}`);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+        return;
+      }
+
+      // Calculate dimension scores (with reverse scoring 6 - raw for reverse items)
+      let d1 = 0, d2 = 0, d3 = 0;
+      QUESTIONS.forEach(q => {
+        const raw = answers[q.id];
+        const effectiveScore = q.reverse ? (6 - raw) : raw;
+        if (q.dim === 1) d1 += effectiveScore;
+        if (q.dim === 2) d2 += effectiveScore;
+        if (q.dim === 3) d3 += effectiveScore;
+      });
+
+      const totalScore = d1 + d2 + d3; // Max 140
+      const meanScore = Number((totalScore / 28).toFixed(2));
+      const d1Pct = Math.round((d1 / 50) * 100);
+      const d2Pct = Math.round((d2 / 55) * 100);
+      const d3Pct = Math.round((d3 / 35) * 100);
+
+      // Determine Tier
+      const tierInfo = evaluateTier(totalScore, meanScore, { d1Pct, d2Pct, d3Pct });
+
+      const reportRecord = {
+        name,
+        group: group || '未分组',
+        d1,
+        d2,
+        d3,
+        d1Pct,
+        d2Pct,
+        d3Pct,
+        totalScore,
+        meanScore,
+        tier: tierInfo.title,
+        timestamp: Date.now(),
+        submittedAt: formatDateTime(new Date())
+      };
+
+      latestReport = reportRecord;
+      renderReportView(reportRecord, tierInfo);
+      document.getElementById('nav-report-btn').classList.remove('hidden');
+      document.getElementById('nav-report-btn').classList.add('flex');
+      switchView('report');
+
+      // Save to Cloud Firestore
+      const syncBadge = document.getElementById('sync-badge');
+      try {
+        if (db && currentUser) {
+          const submissionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'tmbs_submissions');
+          await addDoc(submissionsRef, reportRecord);
+          syncBadge.innerHTML = `<i data-lucide="cloud-check" class="w-3.5 h-3.5"></i><span>结果已实时汇总至组织者后台</span>`;
+          syncBadge.className = 'inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+        } else {
+          allSubmissions.push({ id: 'local-' + Date.now(), ...reportRecord });
+          syncBadge.innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>本地模式已保存</span>`;
+        }
+        lucide.createIcons();
+        showToast('测评提交成功！已为您生成诊断报告', 'success');
+      } catch (err) {
+        console.error("Failed to save submission:", err);
+        showToast('报告已生成，但云端同步遇到网络波动', 'error');
+      }
+    };
+
+    function evaluateTier(total, mean, pcts) {
+      // Find weakest dimension
+      const dims = [
+        { name: '目标与优先级设定', pct: pcts.d1Pct, tip: '每天早晨花5分钟用“四象限法则”选出当日最核心的1-2件要事，并为其设定明确的截止时间。' },
+        { name: '计划与日程执行技巧', pct: pcts.d2Pct, tip: '建立随身待办清单（To-Do List）与电子日历提醒，在深度工作时段开启手机免打扰模式。' },
+        { name: '条理性与环境偏好', pct: pcts.d3Pct, tip: '每天下班或睡前执行“桌面5分钟归位法”，减少环境杂乱带来的注意力损耗与决策疲劳。' }
+      ];
+      dims.sort((a, b) => a.pct - b.pct);
+      const weakest = dims[0];
+
+      if (total >= 115) {
+        return {
+          title: '卓越掌控型',
+          badgeClass: 'bg-gradient-to-r from-morandi-600 to-teal-700 text-white',
+          icon: 'crown',
+          summary: `你的时间管理总分为 ${total} 分（均分 ${mean}），属于【卓越掌控型】。你拥有极强的目标感与执行纪律，既能从宏观上拆解长期规划，又能在微观上保持日常条理与高效节奏，是名副其实的时间管理大师。`,
+          weaknessTitle: '高阶保持与防倦怠建议：',
+          actions: [
+            '警惕“过度排满”带来的精力透支，每周刻意留出 10%~15% 的弹性缓冲时间（Buffer Time）用于休息与灵感复盘。',
+            '将你的高效日程模板沉淀为标准方法论，适当向团队授权或分享经验，实现从“个人高效”到“团队赋能”的跃迁。',
+            `在三项维度中，你的【${weakest.name}】得分率为 ${weakest.pct}%，可作为进一步精益求精的微调方向。`
+          ]
+        };
+      } else if (total >= 90) {
+        return {
+          title: '稳健进阶型',
+          badgeClass: 'bg-morandi-600 text-white',
+          icon: 'trending-up',
+          summary: `你的时间管理总分为 ${total} 分（均分 ${mean}），属于【稳健进阶型】。你已经具备良好的时间管理意识和基础方法，能够应对大多数常规任务，但在部分细节执行或抗干扰环节仍有明显的提升空间。`,
+          weaknessTitle: `精准突破口：优先强化【${weakest.name}】（当前得分率 ${weakest.pct}%）`,
+          actions: [
+            weakest.tip,
+            '每周日晚进行15分钟“周复盘”，检查本周目标完成度并提前锁定下周关键日程。',
+            '尝试使用“番茄工作法”（25分钟专注 + 5分钟休息）将大块任务切割执行，减少中途拖延。'
+          ]
+        };
+      } else if (total >= 65) {
+        return {
+          title: '随性探索型',
+          badgeClass: 'bg-amber-600 text-white',
+          icon: 'compass',
+          summary: `你的时间管理总分为 ${total} 分（均分 ${mean}），属于【随性探索型】。你具备一定的灵活性，但日常节奏容易被临时突发事务、社交消息或凌乱的工作环境打乱，常常出现“忙了一整天却没完成核心任务”的挫败感。`,
+          weaknessTitle: `破局切入点：重点改善【${weakest.name}】（当前得分率 ${weakest.pct}%）`,
+          actions: [
+            '推行“每日三件事清单”：每天只写下最重要的3项任务，未完成前不轻易开启次要琐事。',
+            '建立物理与数字空间整洁习惯：清理桌面杂物与浏览器多余标签页，降低大脑认知负荷。',
+            weakest.tip
+          ]
+        };
+      } else {
+        return {
+          title: '亟待破局型',
+          badgeClass: 'bg-rose-600 text-white',
+          icon: 'flame',
+          summary: `你的时间管理总分为 ${total} 分（均分 ${mean}），属于【亟待破局型】。目前你可能经常处于“被动救火”和截止日期压迫的状态，缺乏固定的规划工具与防干扰边界，时间精力流失较为严重。`,
+          weaknessTitle: `紧急重建指南：从最小习惯重建掌控感`,
+          actions: [
+            '建立“截止日期红线意识”：接到任何任务第一时间记入手机日历并设置提前1天提醒，告别全凭记忆。',
+            '设立每天1小时“黄金免打扰时段”：关闭社交软件弹窗，只专注推进眼前最紧迫的一件事。',
+            '每晚睡前花3分钟写下明天的待办便签，并顺手整理桌面，用确定性的微习惯打破混乱循环。'
+          ]
+        };
+      }
+    }
+
+    // ==================== 6. REPORT RENDERING & SVG RADAR CHART ====================
+    function renderReportView(rec, tierInfo) {
+      document.getElementById('rep-name').textContent = rec.name;
+      document.getElementById('rep-group').textContent = rec.group !== '未分组' ? `· ${rec.group}` : '';
+      document.getElementById('rep-time').textContent = `测评时间：${rec.submittedAt}`;
+
+      const badge = document.getElementById('rep-tier-badge');
+      badge.className = `inline-flex items-center gap-2.5 px-4 py-2.5 rounded-2xl shadow-sm self-start sm:self-center ${tierInfo.badgeClass}`;
+      document.getElementById('rep-tier-title').textContent = tierInfo.title;
+      document.getElementById('rep-tier-icon').setAttribute('data-lucide', tierInfo.icon);
+
+      document.getElementById('rep-total-score').textContent = rec.totalScore;
+      document.getElementById('rep-avg-score').textContent = rec.meanScore.toFixed(2);
+
+      document.getElementById('rep-d1-score').textContent = rec.d1;
+      document.getElementById('rep-d1-pct').textContent = rec.d1Pct;
+      document.getElementById('rep-d1-bar').style.width = `${rec.d1Pct}%`;
+
+      document.getElementById('rep-d2-score').textContent = rec.d2;
+      document.getElementById('rep-d2-pct').textContent = rec.d2Pct;
+      document.getElementById('rep-d2-bar').style.width = `${rec.d2Pct}%`;
+
+      document.getElementById('rep-d3-score').textContent = rec.d3;
+      document.getElementById('rep-d3-pct').textContent = rec.d3Pct;
+      document.getElementById('rep-d3-bar').style.width = `${rec.d3Pct}%`;
+
+      document.getElementById('rep-diagnosis-summary').textContent = tierInfo.summary;
+      document.getElementById('rep-weakness-title').textContent = tierInfo.weaknessTitle;
+
+      const actionList = document.getElementById('rep-action-list');
+      actionList.innerHTML = tierInfo.actions.map(item => `<li>${item}</li>`).join('');
+
+      drawRadarSVG(rec.d1Pct, rec.d2Pct, rec.d3Pct);
+      lucide.createIcons();
+    }
+
+    function drawRadarSVG(p1, p2, p3) {
+      const svg = document.getElementById('radar-svg');
+      const cx = 150, cy = 148, maxR = 92;
+      // 3 angles: Top (-90deg), Bottom-Right (30deg), Bottom-Left (150deg)
+      const angles = [-Math.PI / 2, Math.PI / 6, (5 * Math.PI) / 6];
+
+      const getPoint = (radius, angle) => ({
+        x: cx + radius * Math.cos(angle),
+        y: cy + radius * Math.sin(angle)
+      });
+
+      // Concentric web levels (25%, 50%, 75%, 100%)
+      let webHtml = '';
+      [0.25, 0.5, 0.75, 1.0].forEach(level => {
+        const pts = angles.map(a => {
+          const p = getPoint(maxR * level, a);
+          return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+        }).join(' ');
+        webHtml += `<polygon points="${pts}" fill="${level === 1 ? '#F4F7F9' : 'none'}" stroke="#CAD9E2" stroke-width="1" stroke-dasharray="${level === 1 ? 'none' : '3,3'}" />`;
+      });
+
+      // Axis lines
+      let axisHtml = '';
+      angles.forEach(a => {
+        const p = getPoint(maxR, a);
+        axisHtml += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#CAD9E2" stroke-width="1.2" />`;
+      });
+
+      // Data polygon
+      const vals = [p1 / 100, p2 / 100, p3 / 100];
+      const dataPoints = vals.map((v, idx) => getPoint(maxR * Math.max(v, 0.08), angles[idx]));
+      const polyStr = dataPoints.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+      const dotsHtml = dataPoints.map(p => `
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="#4A6B82" stroke="#FFFFFF" stroke-width="2" />
+      `).join('');
+
+      svg.innerHTML = `
+        ${webHtml}
+        ${axisHtml}
+        <polygon points="${polyStr}" fill="rgba(74, 107, 130, 0.28)" stroke="#4A6B82" stroke-width="2.5" stroke-linejoin="round" />
+        ${dotsHtml}
+        <!-- Labels -->
+        <text x="150" y="26" text-anchor="middle" fill="#2B3C49" font-size="11" font-weight="700">目标与优先级</text>
+        <text x="150" y="40" text-anchor="middle" fill="#4A6B82" font-size="11" font-weight="700">${p1}%</text>
+
+        <text x="248" y="212" text-anchor="middle" fill="#2B3C49" font-size="11" font-weight="700">计划与执行</text>
+        <text x="248" y="226" text-anchor="middle" fill="#6B8E9B" font-size="11" font-weight="700">${p2}%</text>
+
+        <text x="52" y="212" text-anchor="middle" fill="#2B3C49" font-size="11" font-weight="700">条理与环境</text>
+        <text x="52" y="226" text-anchor="middle" fill="#0D9488" font-size="11" font-weight="700">${p3}%</text>
+      `;
+    }
+
+    // Generate downloadable Canvas image of Result Card
+    window.downloadReportImage = function() {
+      if (!latestReport) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = 750;
+      canvas.height = 960;
+      const ctx = canvas.getContext('2d');
+
+      // Background
+      ctx.fillStyle = '#F4F7F9';
+      ctx.fillRect(0, 0, 750, 960);
+
+      // Header Banner
+      const grad = ctx.createLinearGradient(0, 0, 750, 260);
+      grad.addColorStop(0, '#4A6B82');
+      grad.addColorStop(1, '#6B8E9B');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 750, 250);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 34px "Noto Sans SC", sans-serif';
+      ctx.fillText('时间管理能力测评 · 诊断报告', 50, 85);
+
+      ctx.font = '22px "Noto Sans SC", sans-serif';
+      ctx.fillStyle = '#E5ECF0';
+      ctx.fillText(`测评者：${latestReport.name}  (${latestReport.group})`, 50, 135);
+      ctx.font = '18px "Noto Sans SC", sans-serif';
+      ctx.fillText(`测评时间：${latestReport.submittedAt}`, 50, 175);
+
+      // Main White Card
+      ctx.fillStyle = '#FFFFFF';
+      roundRect(ctx, 40, 210, 670, 690, 28, true, false);
+
+      // Score & Tier
+      ctx.fillStyle = '#4A6B82';
+      ctx.font = 'bold 26px "Noto Sans SC", sans-serif';
+      ctx.fillText(`综合等级：【${latestReport.tier}】`, 75, 275);
+
+      ctx.fillStyle = '#2B3C49';
+      ctx.font = 'bold 54px Inter, sans-serif';
+      ctx.fillText(`${latestReport.totalScore}`, 75, 355);
+      ctx.font = '24px "Noto Sans SC", sans-serif';
+      ctx.fillStyle = '#7C9EB2';
+      ctx.fillText(`/ 140 分  (题项均分 ${latestReport.meanScore} 分)`, 185, 352);
+
+      // Dimension Bars
+      const bars = [
+        { label: `1. 目标与优先级设定：${latestReport.d1}/50 (${latestReport.d1Pct}%)`, pct: latestReport.d1Pct, color: '#4A6B82', y: 430 },
+        { label: `2. 计划与日程执行技巧：${latestReport.d2}/55 (${latestReport.d2Pct}%)`, pct: latestReport.d2Pct, color: '#6B8E9B', y: 530 },
+        { label: `3. 条理性与环境偏好：${latestReport.d3}/35 (${latestReport.d3Pct}%)`, pct: latestReport.d3Pct, color: '#0D9488', y: 630 }
+      ];
+
+      bars.forEach(b => {
+        ctx.fillStyle = '#2B3C49';
+        ctx.font = 'bold 22px "Noto Sans SC", sans-serif';
+        ctx.fillText(b.label, 75, b.y);
+
+        ctx.fillStyle = '#E5ECF0';
+        roundRect(ctx, 75, b.y + 18, 590, 22, 11, true, false);
+
+        ctx.fillStyle = b.color;
+        roundRect(ctx, 75, b.y + 18, Math.max(22, (590 * b.pct) / 100), 22, 11, true, false);
+      });
+
+      // Summary Text
+      ctx.fillStyle = '#4A6B82';
+      ctx.font = '19px "Noto Sans SC", sans-serif';
+      ctx.fillText('基于 Macan et al. 经典时间管理行为量表 (TMBS) 生成', 75, 760);
+      ctx.fillStyle = '#7C9EB2';
+      ctx.font = '17px "Noto Sans SC", sans-serif';
+      ctx.fillText('长按保存图片或分享给好友，一起提升时间掌控力', 75, 800);
+
+      const link = document.createElement('a');
+      link.download = `时间管理测评报告_${latestReport.name}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('诊断报告图片已开始下载！', 'success');
+    };
+
+    window.startNewAssessment = function() {
+      answers = {};
+      highlightedUnanswered.clear();
+      document.getElementById('input-name').value = '';
+      document.getElementById('input-group').value = '';
+      setActiveStep(0);
+      switchView('assessment');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // ==================== 7. QR CODE MODAL & POSTER EXPORT ====================
+    let qrInstance = null;
+
+    window.openQrModal = function() {
+      const modal = document.getElementById('qr-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      const urlInput = document.getElementById('qr-url-input');
+      if (!urlInput.value) {
+        urlInput.value = window.location.href;
+      }
+      regenerateQRCode();
+      lucide.createIcons();
+    };
+
+    window.closeQrModal = function() {
+      const modal = document.getElementById('qr-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    window.regenerateQRCode = function() {
+      const url = document.getElementById('qr-url-input').value.trim() || window.location.href;
+      const box = document.getElementById('qrcode-canvas-box');
+      box.innerHTML = '';
+      try {
+        qrInstance = new QRCode(box, {
+          text: url,
+          width: 176,
+          height: 176,
+          colorDark: '#2B3C49',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (e) {
+        console.error('QR generation failed:', e);
+      }
+    };
+
+    window.copyShareUrl = function() {
+      const urlInput = document.getElementById('qr-url-input');
+      urlInput.select();
+      urlInput.setSelectionRange(0, 99999);
+      try {
+        document.execCommand('copy');
+        showToast('测评链接已复制到剪贴板！', 'success');
+      } catch (err) {
+        showToast('请手动全选复制输入框中的链接', 'error');
+      }
+    };
+
+    window.downloadQrPoster = function() {
+      const qrCanvas = document.querySelector('#qrcode-canvas-box canvas');
+      const qrImg = document.querySelector('#qrcode-canvas-box img');
+      if (!qrCanvas && !qrImg) {
+        showToast('二维码正在生成中，请稍候', 'error');
+        return;
+      }
+
+      const poster = document.createElement('canvas');
+      poster.width = 640;
+      poster.height = 840;
+      const ctx = poster.getContext('2d');
+
+      // Morandi Blue Gradient Background
+      const grad = ctx.createLinearGradient(0, 0, 640, 840);
+      grad.addColorStop(0, '#4A6B82');
+      grad.addColorStop(1, '#324857');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 640, 840);
+
+      // Decorative circles
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.beginPath();
+      ctx.arc(580, 80, 160, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Badge
+      ctx.fillStyle = 'rgba(255,255,255,0.16)';
+      roundRect(ctx, 180, 75, 280, 38, 19, true, false);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '600 18px "Noto Sans SC", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('TMBS 学术量表 · 3分钟自测', 320, 100);
+
+      // Title
+      ctx.font = 'bold 42px "Noto Sans SC", sans-serif';
+      ctx.fillText('测测你的时间管理能力', 320, 175);
+
+      ctx.font = '22px "Noto Sans SC", sans-serif';
+      ctx.fillStyle = '#CAD9E2';
+      ctx.fillText('目标设定 · 计划执行 · 条理偏好 三维诊断', 320, 222);
+
+      // White QR Card
+      ctx.fillStyle = '#FFFFFF';
+      roundRect(ctx, 145, 275, 350, 350, 28, true, false);
+
+      // Draw QR Code inside white card
+      const source = qrCanvas || qrImg;
+      ctx.drawImage(source, 175, 305, 290, 290);
+
+      // Bottom Call to Action
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 24px "Noto Sans SC", sans-serif';
+      ctx.fillText('微信 / 浏览器扫一扫立即测评', 320, 695);
+
+      ctx.fillStyle = '#A4BECD';
+      ctx.font = '18px "Noto Sans SC", sans-serif';
+      ctx.fillText('提交后立刻获取能力等级与专属雷达图报告', 320, 735);
+
+      const link = document.createElement('a');
+      link.download = '时间管理能力测评_邀请海报.png';
+      link.href = poster.toDataURL('image/png');
+      link.click();
+      showToast('二维码邀请海报已下载！', 'success');
+    };
+
+    // ==================== 8. ORGANIZER ADMIN DASHBOARD ====================
+    window.handleAdminNav = function() {
+      if (isAdminUnlocked) {
+        switchView('admin');
+        renderAdminDashboard();
+      } else {
+        const modal = document.getElementById('admin-auth-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => document.getElementById('admin-pwd-input').focus(), 100);
+      }
+    };
+
+    window.closeAdminAuthModal = function() {
+      const modal = document.getElementById('admin-auth-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    window.verifyAdminPwd = function() {
+      const pwd = document.getElementById('admin-pwd-input').value.trim();
+      if (pwd === '1234') {
+        isAdminUnlocked = true;
+        closeAdminAuthModal();
+        switchView('admin');
+        renderAdminDashboard();
+        showToast('验证成功，已进入组织者汇总看板', 'success');
+      } else {
+        showToast('密码错误（默认密码为 1234）', 'error');
+      }
+    };
+
+    window.renderAdminDashboard = function() {
+      const count = allSubmissions.length;
+      document.getElementById('stat-total-count').textContent = count;
+
+      if (count === 0) {
+        document.getElementById('stat-avg-total').textContent = '0.0';
+        document.getElementById('stat-avg-mean').textContent = '0.00';
+        document.getElementById('stat-top-rate').textContent = '0%';
+        document.getElementById('stat-top-count').textContent = '(0人)';
+        document.getElementById('tier-dist-bar').innerHTML = `<div class="bg-morandi-200 w-full h-full"></div>`;
+        document.getElementById('tier-dist-legend').innerHTML = `<p class="col-span-2 text-morandi-400">暂无数据</p>`;
+        document.getElementById('team-d1-text').textContent = '0.0 分 (0%)';
+        document.getElementById('team-d1-bar').style.width = '0%';
+        document.getElementById('team-d2-text').textContent = '0.0 分 (0%)';
+        document.getElementById('team-d2-bar').style.width = '0%';
+        document.getElementById('team-d3-text').textContent = '0.0 分 (0%)';
+        document.getElementById('team-d3-bar').style.width = '0%';
+        renderAdminTable();
+        return;
+      }
+
+      const sumTotal = allSubmissions.reduce((acc, s) => acc + (s.totalScore || 0), 0);
+      const sumD1 = allSubmissions.reduce((acc, s) => acc + (s.d1 || 0), 0);
+      const sumD2 = allSubmissions.reduce((acc, s) => acc + (s.d2 || 0), 0);
+      const sumD3 = allSubmissions.reduce((acc, s) => acc + (s.d3 || 0), 0);
+
+      const avgTotal = (sumTotal / count).toFixed(1);
+      const avgMean = (sumTotal / count / 28).toFixed(2);
+      const avgD1 = (sumD1 / count).toFixed(1);
+      const avgD2 = (sumD2 / count).toFixed(1);
+      const avgD3 = (sumD3 / count).toFixed(1);
+
+      const avgD1Pct = Math.round((sumD1 / count / 50) * 100);
+      const avgD2Pct = Math.round((sumD2 / count / 55) * 100);
+      const avgD3Pct = Math.round((sumD3 / count / 35) * 100);
+
+      // Tier distribution counts
+      const tiers = [
+        { name: '卓越掌控型', count: allSubmissions.filter(s => s.tier === '卓越掌控型').length, color: 'bg-morandi-600', dot: 'bg-morandi-600' },
+        { name: '稳健进阶型', count: allSubmissions.filter(s => s.tier === '稳健进阶型').length, color: 'bg-morandi-400', dot: 'bg-morandi-400' },
+        { name: '随性探索型', count: allSubmissions.filter(s => s.tier === '随性探索型').length, color: 'bg-amber-400', dot: 'bg-amber-400' },
+        { name: '亟待破局型', count: allSubmissions.filter(s => s.tier === '亟待破局型').length, color: 'bg-rose-400', dot: 'bg-rose-400' }
+      ];
+
+      const topCount = tiers[0].count;
+      const topRate = Math.round((topCount / count) * 100);
+
+      document.getElementById('stat-avg-total').textContent = avgTotal;
+      document.getElementById('stat-avg-mean').textContent = avgMean;
+      document.getElementById('stat-top-rate').textContent = `${topRate}%`;
+      document.getElementById('stat-top-count').textContent = `(${topCount}人)`;
+
+      // Render stacked bar & legend
+      document.getElementById('tier-dist-bar').innerHTML = tiers.map(t => {
+        const w = (t.count / count) * 100;
+        return w > 0 ? `<div class="${t.color} h-full transition-all duration-500" style="width: ${w}%" title="${t.name}: ${t.count}人"></div>` : '';
+      }).join('');
+
+      document.getElementById('tier-dist-legend').innerHTML = tiers.map(t => {
+        const pct = Math.round((t.count / count) * 100);
+        return `
+          <div class="flex items-center justify-between bg-morandi-50/70 px-3 py-2 rounded-xl">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full ${t.dot}"></span>
+              <span class="text-morandi-700 font-medium">${t.name}</span>
+            </div>
+            <span class="font-bold text-morandi-900">${t.count}人 <span class="text-morandi-400 font-normal">(${pct}%)</span></span>
+          </div>
+        `;
+      }).join('');
+
+      // Team dimension averages
+      document.getElementById('team-d1-text').textContent = `${avgD1} 分 (${avgD1Pct}%)`;
+      document.getElementById('team-d1-bar').style.width = `${avgD1Pct}%`;
+
+      document.getElementById('team-d2-text').textContent = `${avgD2} 分 (${avgD2Pct}%)`;
+      document.getElementById('team-d2-bar').style.width = `${avgD2Pct}%`;
+
+      document.getElementById('team-d3-text').textContent = `${avgD3} 分 (${avgD3Pct}%)`;
+      document.getElementById('team-d3-bar').style.width = `${avgD3Pct}%`;
+
+      renderAdminTable();
+    };
+
+    window.renderAdminTable = function() {
+      const tbody = document.getElementById('admin-table-body');
+      const emptyState = document.getElementById('admin-empty-state');
+      const keyword = (document.getElementById('admin-search').value || '').trim().toLowerCase();
+      const sortMode = document.getElementById('admin-sort').value;
+
+      let filtered = allSubmissions.filter(s => {
+        if (!keyword) return true;
+        return (s.name && s.name.toLowerCase().includes(keyword)) ||
+               (s.group && s.group.toLowerCase().includes(keyword)) ||
+               (s.tier && s.tier.toLowerCase().includes(keyword));
+      });
+
+      filtered.sort((a, b) => {
+        if (sortMode === 'score-desc') return (b.totalScore || 0) - (a.totalScore || 0);
+        if (sortMode === 'score-asc') return (a.totalScore || 0) - (b.totalScore || 0);
+        return (b.timestamp || 0) - (a.timestamp || 0);
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      tbody.innerHTML = filtered.map(s => {
+        const badgeStyle =
+          s.tier === '卓越掌控型' ? 'bg-morandi-100 text-morandi-800 border-morandi-300' :
+          s.tier === '稳健进阶型' ? 'bg-sky-50 text-sky-700 border-sky-200' :
+          s.tier === '随性探索型' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+          'bg-rose-50 text-rose-700 border-rose-200';
+
+        return `
+          <tr class="hover:bg-morandi-50/60 transition">
+            <td class="py-3 px-4 font-semibold text-morandi-900 whitespace-nowrap">${escapeHtml(s.name)}</td>
+            <td class="py-3 px-4 text-morandi-500 whitespace-nowrap">${escapeHtml(s.group || '未分组')}</td>
+            <td class="py-3 px-4 whitespace-nowrap">
+              <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badgeStyle}">${escapeHtml(s.tier)}</span>
+            </td>
+            <td class="py-3 px-4 text-right font-bold text-morandi-800 whitespace-nowrap">
+              ${s.totalScore} <span class="text-xs font-normal text-morandi-400">(${Number(s.meanScore).toFixed(2)})</span>
+            </td>
+            <td class="py-3 px-4 text-right text-morandi-600 whitespace-nowrap">${s.d1}/50</td>
+            <td class="py-3 px-4 text-right text-morandi-600 whitespace-nowrap">${s.d2}/55</td>
+            <td class="py-3 px-4 text-right text-morandi-600 whitespace-nowrap">${s.d3}/35</td>
+            <td class="py-3 px-4 text-right text-xs text-morandi-400 whitespace-nowrap">${escapeHtml(s.submittedAt || '')}</td>
+          </tr>
+        `;
+      }).join('');
+    };
+
+    window.exportCSV = function() {
+      if (allSubmissions.length === 0) {
+        showToast('当前没有可导出的测评数据', 'error');
+        return;
+      }
+
+      const headers = ['姓名/昵称', '组别/学号', '能力等级', '总分(满分140)', '题项均分(1-5)', '目标与优先级设定(满分50)', '计划与日程执行技巧(满分55)', '条理性与环境偏好(满分35)', '提交时间'];
+      const rows = allSubmissions.map(s => [
+        `"${(s.name || '').replace(/"/g, '""')}"`,
+        `"${(s.group || '未分组').replace(/"/g, '""')}"`,
+        `"${s.tier}"`,
+        s.totalScore,
+        s.meanScore,
+        s.d1,
+        s.d2,
+        s.d3,
+        `"${s.submittedAt || ''}"`
+      ]);
+
+      // Add UTF-8 BOM (\uFEFF) to prevent Chinese garbled text in Excel
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `时间管理能力测评汇总表_${formatDateFile(new Date())}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast(`已成功导出 ${allSubmissions.length} 条测评数据！`, 'success');
+    };
+
+    window.confirmClearData = function() {
+      if (allSubmissions.length === 0) {
+        showToast('当前暂无数据可清空', 'error');
+        return;
+      }
+      const modal = document.getElementById('confirm-clear-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    window.closeClearModal = function() {
+      const modal = document.getElementById('confirm-clear-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    window.executeClearData = async function() {
+      closeClearModal();
+      try {
+        if (db && currentUser) {
+          const promises = allSubmissions.map(item =>
+            deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tmbs_submissions', item.id))
+          );
+          await Promise.all(promises);
+        }
+        allSubmissions = [];
+        renderAdminDashboard();
+        showToast('已清空所有测评记录', 'success');
+      } catch (err) {
+        console.error('Clear data error:', err);
+        showToast('清空数据失败，请稍后重试', 'error');
+      }
+    };
+
+    // ==================== 9. NAVIGATION & HELPERS ====================
+    window.switchView = function(viewName) {
+      ['assessment', 'report', 'admin'].forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (v === viewName) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+      lucide.createIcons();
+    };
+
+    window.showToast = function(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const style = type === 'error'
+        ? 'bg-rose-600 text-white shadow-lg'
+        : type === 'success'
+          ? 'bg-morandi-700 text-white shadow-lg'
+          : 'bg-morandi-800 text-white shadow-lg';
+
+      toast.className = `${style} px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium flex items-center justify-center gap-2 fade-in`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 2800);
+    };
+
+    function formatDateTime(date) {
+      const pad = n => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function formatDateFile(date) {
+      const pad = n => String(n).padStart(2, '0');
+      return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    // Boot Application
+    window.addEventListener('DOMContentLoaded', () => {
+      renderQuestions();
+      setActiveStep(0);
+      lucide.createIcons();
+      initCloudSync();
+    });
+  </script>
+</body>
+</html>
